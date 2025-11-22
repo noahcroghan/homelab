@@ -14,6 +14,8 @@ services:
       - caddy_config:/config
     networks:
       - media-net
+    labels:
+      - "com.centurylinklabs.watchtower.enable=false"
   jellyfin:
     image: ghcr.io/hotio/jellyfin
     container_name: jellyfin
