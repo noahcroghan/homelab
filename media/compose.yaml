@@ -1,18 +1,35 @@
 services:
+  caddy:
+    build: .
+    container_name: caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - CLOUDFLARE_API_TOKEN=${CLOUDFLARE_API_TOKEN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - media-net
   jellyfin:
     image: ghcr.io/hotio/jellyfin
     container_name: jellyfin
     ports:
       - 8096:8096
     environment:
-      - PUID=1000
-      - PGID=1000
+      - PUID=${PUID}
+      - PGID=${PGID}
       - UMASK=002
-      - TZ=America/Chicago
+      - TZ=${TZ}
     volumes:
       - /data/media:/data/media
       - /docker/appdata/jellyfin:/config
     restart: unless-stopped
+    networks:
+      - media-net
   qbittorrent:
     container_name: qbittorrent
     image: ghcr.io/hotio/qbittorrent
@@ -20,16 +37,16 @@ services:
       - 9091:9091
     hostname: qbittorrent.internal
     environment:
-      - PUID=1001
-      - PGID=1000
+      - PUID=${PUID}
+      - PGID=${PGID}
       - UMASK=002
-      - TZ=America/Chicago
+      - TZ=${TZ}
       - WEBUI_PORTS=9091/tcp,9091/udp
       - LIBTORRENT=v1
       - VPN_ENABLED=true
       - VPN_CONF=wg0
       - VPN_PROVIDER=generic
-      - VPN_LAN_NETWORK=192.168.1.0/24,100.64.0.0/10
+      - VPN_LAN_NETWORK=192.168.1.0/24,100.64.0.0/10,172.16.0.0/12
       - VPN_LAN_LEAK_ENABLED=false
       - VPN_EXPOSE_PORTS_ON_LAN
       - VPN_AUTO_PORT_FORWARD=false
@@ -49,52 +66,62 @@ services:
     sysctls:
       - net.ipv4.conf.all.src_valid_mark=1
       - net.ipv6.conf.all.disable_ipv6=1
+    networks:
+      - media-net
   radarr:
     container_name: radarr
     image: ghcr.io/hotio/radarr
     ports:
       - 7878:7878
     environment:
-      - PUID=1002
-      - PGID=1000
+      - PUID=${PUID}
+      - PGID=${PGID}
       - UMASK=002
-      - TZ=America/Chicago
+      - TZ=${TZ}
     volumes:
       - /docker/appdata/radarr:/config
       - /data:/data
     restart: unless-stopped
+    networks:
+      - media-net
   sonarr:
     container_name: sonarr
     image: ghcr.io/hotio/sonarr
     ports:
       - 8989:8989
     environment:
-      - PUID=1003
-      - PGID=1000
+      - PUID=${PUID}
+      - PGID=${PGID}
       - UMASK=002
-      - TZ=America/Chicago
+      - TZ=${TZ}
     volumes:
       - /docker/appdata/sonarr:/config
       - /data:/data
     restart: unless-stopped
+    networks:
+      - media-net
   prowlarr:
     container_name: prowlarr
     image: ghcr.io/hotio/prowlarr
     ports:
       - 9696:9696
     environment:
-      - PUID=1004
-      - PGID=1000
+      - PUID=${PUID}
+      - PGID=${PGID}
       - UMASK=002
-      - TZ=America/Chicago
+      - TZ=${TZ}
     volumes:
       - /docker/appdata/prowlarr:/config
     restart: unless-stopped
+    networks:
+      - media-net
   flaresolverr:
     image: ghcr.io/flaresolverr/flaresolverr
     container_name: flaresolverr
     environment:
-      - TZ=America/Chicago
+      - TZ=${TZ}
+    networks:
+      - media-net
     ports:
       - 8191:8191
     restart: unless-stopped
@@ -104,7 +131,38 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
-      TZ: America/Chicago
-      WATCHTOWER_SCHEDULE: "0 0 4 * * *"
-      WATCHTOWER_CLEANUP: "true"
+      - TZ=${TZ}
+      - WATCHTOWER_SCHEDULE=0 0 4 * * *
+      - WATCHTOWER_CLEANUP="true"
     restart: unless-stopped
+  homarr:
+    container_name: homarr
+    image: ghcr.io/homarr-labs/homarr
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./homarr/appdata:/appdata
+    environment:
+      - SECRET_ENCRYPTION_KEY=${HOMARR_SECRET_KEY}
+    ports:
+      - '7575:7575'
+    networks:
+      - media-net
+  dashdot:
+    image: mauricenino/dashdot
+    container_name: dashdot
+    ports:
+      - "3001:3001"
+    volumes:
+      - "/:/mnt/host:ro"
+    privileged: true
+    restart: unless-stopped
+    networks:
+      - media-net
+
+networks:
+  media-net:
+
+volumes:
+  caddy_data:
+  caddy_config:
