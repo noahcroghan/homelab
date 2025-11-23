@@ -1,12 +1,23 @@
 services:
   minecraft-server:
     image: itzg/minecraft-server
+    container_name: minecraft-server
     stdin_open: true
     tty: true
     ports:
-      - "25565:25565"
+      - 25565:25565
     volumes:
       - ./data:/data
+      - ./Cobblemon.mrpack:/Cobblemon.mrpack
     environment:
-      EULA: "true"
+      EULA: true
+      MEMORY: 6G
+      TYPE: "MODRINTH"
+      MODRINTH_MODPACK: "/Cobblemon.mrpack"
+      MODRINTH_EXCLUDE_FILES: |
+        e4mc
+      RCON_CMDS_STARTUP:  |-
+        gamerule playersSleepingPercentage 0
+      WHITELIST: ${WHITELIST}
+      SEED: "5664087223497923792"
     restart: unless-stopped
