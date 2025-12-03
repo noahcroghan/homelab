@@ -44,3 +44,8 @@ dash.yourdomain.com {
     import cloudflare
     reverse_proxy dashdot:3001
 }
+
+beszel.yourdomain.com {
+    import cloudflare
+    reverse_proxy beszel:8090
+}
