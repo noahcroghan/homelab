@@ -1,43 +1,60 @@
 services:
   caddy:
     build: .
+    image: caddy-cloudflare:custom
     container_name: caddy
     restart: unless-stopped
+    networks:
+      - media-net
     ports:
       - "80:80"
       - "443:443"
-    environment:
-      - CLOUDFLARE_API_TOKEN=${CLOUDFLARE_API_TOKEN}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
       - caddy_data:/data
       - caddy_config:/config
-    networks:
-      - media-net
+    environment:
+      - CLOUDFLARE_API_TOKEN=${CLOUDFLARE_API_TOKEN}
+      - ACME_AGREE=true
+      - DOMAIN=${DOMAIN}
+      - EMAIL=${EMAIL}
     labels:
       - "com.centurylinklabs.watchtower.enable=false"
+
   jellyfin:
     image: ghcr.io/hotio/jellyfin
     container_name: jellyfin
+    restart: unless-stopped
+    networks:
+      - media-net
     ports:
-      - 8096:8096
+      - "8096:8096"
+    volumes:
+      - /data/media:/data/media
+      - /docker/appdata/jellyfin:/config
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
       - UMASK=002
       - TZ=${TZ}
-    volumes:
-      - /data/media:/data/media
-      - /docker/appdata/jellyfin:/config
+
+  qbittorrent:
+    image: ghcr.io/hotio/qbittorrent
+    container_name: qbittorrent
+    hostname: qbittorrent.internal
     restart: unless-stopped
     networks:
       - media-net
-  qbittorrent:
-    container_name: qbittorrent
-    image: ghcr.io/hotio/qbittorrent
     ports:
-      - 9091:9091
-    hostname: qbittorrent.internal
+      - "9091:9091"
+    volumes:
+      - /data/torrents:/data/torrents
+      - /docker/appdata/qbittorrent:/config
+    cap_add:
+      - NET_ADMIN
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1
+      - net.ipv6.conf.all.disable_ipv6=1
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -50,7 +67,7 @@ services:
       - VPN_PROVIDER=generic
       - VPN_LAN_NETWORK=192.168.1.0/24,100.64.0.0/10,172.16.0.0/12
       - VPN_LAN_LEAK_ENABLED=false
-      - VPN_EXPOSE_PORTS_ON_LAN
+      - VPN_EXPOSE_PORTS_ON_LAN=9091/tcp,9091/udp
       - VPN_AUTO_PORT_FORWARD=false
       - VPN_AUTO_PORT_FORWARD_TO_PORTS=
       - VPN_FIREWALL_TYPE=auto
@@ -58,121 +75,119 @@ services:
       - VPN_NAMESERVERS=
       - PRIVOXY_ENABLED=true
       - UNBOUND_ENABLED=false
-      - UNBOUND_NAMESERVERS
-    volumes:
-      - /data/torrents:/data/torrents
-      - /docker/appdata/qbittorrent:/config
+      - UNBOUND_NAMESERVERS=
+
+  radarr:
+    image: ghcr.io/hotio/radarr
+    container_name: radarr
     restart: unless-stopped
-    cap_add:
-      - NET_ADMIN
-    sysctls:
-      - net.ipv4.conf.all.src_valid_mark=1
-      - net.ipv6.conf.all.disable_ipv6=1
     networks:
       - media-net
-  radarr:
-    container_name: radarr
-    image: ghcr.io/hotio/radarr
     ports:
-      - 7878:7878
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - UMASK=002
-      - TZ=${TZ}
+      - "7878:7878"
     volumes:
       - /docker/appdata/radarr:/config
       - /data:/data
-    restart: unless-stopped
-    networks:
-      - media-net
-  sonarr:
-    container_name: sonarr
-    image: ghcr.io/hotio/sonarr
-    ports:
-      - 8989:8989
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
       - UMASK=002
       - TZ=${TZ}
+
+  sonarr:
+    image: ghcr.io/hotio/sonarr
+    container_name: sonarr
+    restart: unless-stopped
+    networks:
+      - media-net
+    ports:
+      - "8989:8989"
     volumes:
       - /docker/appdata/sonarr:/config
       - /data:/data
-    restart: unless-stopped
-    networks:
-      - media-net
-  prowlarr:
-    container_name: prowlarr
-    image: ghcr.io/hotio/prowlarr
-    ports:
-      - 9696:9696
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
       - UMASK=002
       - TZ=${TZ}
-    volumes:
-      - /docker/appdata/prowlarr:/config
+
+  prowlarr:
+    image: ghcr.io/hotio/prowlarr
+    container_name: prowlarr
     restart: unless-stopped
-    networks:
-      - media-net
-  flaresolverr:
-    image: ghcr.io/flaresolverr/flaresolverr
-    container_name: flaresolverr
-    environment:
-      - TZ=${TZ}
     networks:
       - media-net
     ports:
-      - 8191:8191
+      - "9696:9696"
+    volumes:
+      - /docker/appdata/prowlarr:/config
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - UMASK=002
+      - TZ=${TZ}
+
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr
+    container_name: flaresolverr
     restart: unless-stopped
+    networks:
+      - media-net
+    ports:
+      - "8191:8191"
+    environment:
+      - TZ=${TZ}
+
   watchtower:
     image: containrrr/watchtower
     container_name: watchtower
+    restart: unless-stopped
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
       - TZ=${TZ}
       - WATCHTOWER_SCHEDULE=0 0 4 * * *
-      - WATCHTOWER_CLEANUP="true"
+      - WATCHTOWER_CLEANUP=true
       - DOCKER_API_VERSION=1.45
-    restart: unless-stopped
+
   homarr:
-    container_name: homarr
     image: ghcr.io/homarr-labs/homarr
+    container_name: homarr
     restart: unless-stopped
+    networks:
+      - media-net
+    ports:
+      - "7575:7575"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./homarr/appdata:/appdata
     environment:
       - SECRET_ENCRYPTION_KEY=${HOMARR_SECRET_KEY}
-    ports:
-      - '7575:7575'
-    networks:
-      - media-net
+
   dashdot:
     image: mauricenino/dashdot
     container_name: dashdot
+    restart: unless-stopped
+    privileged: true
+    networks:
+      - media-net
     ports:
       - "3001:3001"
     volumes:
-      - "/:/mnt/host:ro"
-    privileged: true
-    restart: unless-stopped
-    networks:
-      - media-net
+      - /:/mnt/host:ro
+
   beszel:
     image: henrygd/beszel
     container_name: beszel
     restart: unless-stopped
+    networks:
+      - media-net
     ports:
-      - 8090:8090
+      - "8090:8090"
     volumes:
       - ./beszel_data:/beszel_data
       - ./beszel_socket:/beszel_socket
-    networks:
-      - media-net
+
   beszel-agent:
     image: henrygd/beszel-agent
     container_name: beszel-agent
@@ -183,13 +198,27 @@ services:
       - ./beszel_socket:/beszel_socket
       - /var/run/docker.sock:/var/run/docker.sock:ro
     environment:
-      LISTEN: /beszel_socket/beszel.sock
-      HUB_URL: http://localhost:8090
-      TOKEN: ${BESZEL_TOKEN}
-      KEY: ${BESZEL_KEY}
+      - LISTEN=/beszel_socket/beszel.sock
+      - HUB_URL=http://localhost:8090
+      - TOKEN=${BESZEL_TOKEN}
+      - KEY=${BESZEL_KEY}
+
+  vaultwarden:
+    image: vaultwarden/server:latest
+    container_name: vaultwarden
+    restart: unless-stopped
+    networks:
+      - media-net
+    volumes:
+      - ./vw-data/:/data/
+    environment:
+      - DOMAIN=https://vault.noahcroghan.com
+      - SIGNUPS_ALLOWED=true
+      - ADMIN_TOKEN=${VAULT_ADMIN_TOKEN}
 
 networks:
   media-net:
+
 
 volumes:
   caddy_data:

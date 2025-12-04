@@ -1,0 +1,59 @@
+{
+	email {$EMAIL}
+}
+
+(cloudflare) {
+	tls {
+		dns cloudflare {$CLOUDFLARE_API_TOKEN}
+	}
+}
+
+# --- Services ---
+
+jellyfin.{$DOMAIN} {
+	import cloudflare
+	reverse_proxy jellyfin:8096
+}
+
+sonarr.{$DOMAIN} {
+	import cloudflare
+	reverse_proxy sonarr:8989
+}
+
+radarr.{$DOMAIN} {
+	import cloudflare
+	reverse_proxy radarr:7878
+}
+
+prowlarr.{$DOMAIN} {
+	import cloudflare
+	reverse_proxy prowlarr:9696
+}
+
+qbittorrent.{$DOMAIN} {
+	import cloudflare
+	reverse_proxy qbittorrent:9091
+}
+
+homarr.{$DOMAIN} {
+	import cloudflare
+	reverse_proxy homarr:7575
+}
+
+dash.{$DOMAIN} {
+	import cloudflare
+	reverse_proxy dashdot:3001
+}
+
+beszel.{$DOMAIN} {
+	import cloudflare
+	reverse_proxy beszel:8090
+}
+
+vault.{$DOMAIN} {
+	import cloudflare
+	reverse_proxy vaultwarden:80 {
+		header_up X-Real-IP {remote_host}
+		header_up X-Forwarded-Proto {scheme}
+	}
+}

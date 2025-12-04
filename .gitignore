@@ -1,5 +1,5 @@
 .env
-Caddyfile
 media/homarr/appdata/
 minecraft/data/
 beszel*
+vw-data/
