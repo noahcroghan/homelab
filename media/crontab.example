@@ -1,0 +1,1 @@
+0 * * * * git -C /path/to/vuetorrent pull

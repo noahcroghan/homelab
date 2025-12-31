@@ -50,6 +50,7 @@ services:
     volumes:
       - /data/torrents:/data/torrents
       - /docker/appdata/qbittorrent:/config
+      - ~/VueTorrent:/vuetorrent
     cap_add:
       - NET_ADMIN
     sysctls:
@@ -65,7 +66,7 @@ services:
       - VPN_ENABLED=true
       - VPN_CONF=wg0
       - VPN_PROVIDER=generic
-      - VPN_LAN_NETWORK=192.168.1.0/24,100.64.0.0/10,172.16.0.0/12
+      - VPN_LAN_NETWORK=192.168.1.0/24,100.64.0.0/10
       - VPN_LAN_LEAK_ENABLED=false
       - VPN_EXPOSE_PORTS_ON_LAN=9091/tcp,9091/udp
       - VPN_AUTO_PORT_FORWARD=false
@@ -73,7 +74,7 @@ services:
       - VPN_FIREWALL_TYPE=auto
       - VPN_HEALTHCHECK_ENABLED=false
       - VPN_NAMESERVERS=
-      - PRIVOXY_ENABLED=true
+      - PRIVOXY_ENABLED=false
       - UNBOUND_ENABLED=false
       - UNBOUND_NAMESERVERS=
 
