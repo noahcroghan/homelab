@@ -62,7 +62,6 @@ services:
       - UMASK=002
       - TZ=${TZ}
       - WEBUI_PORTS=9091/tcp,9091/udp
-      - LIBTORRENT=v1
       - VPN_ENABLED=true
       - VPN_CONF=wg0
       - VPN_PROVIDER=generic
@@ -70,13 +69,12 @@ services:
       - VPN_LAN_LEAK_ENABLED=false
       - VPN_EXPOSE_PORTS_ON_LAN=9091/tcp,9091/udp
       - VPN_AUTO_PORT_FORWARD=false
-      - VPN_AUTO_PORT_FORWARD_TO_PORTS=
-      - VPN_FIREWALL_TYPE=auto
+      - VPN_PORT_REDIRECTS=27477@27477/tcp,27477@27477/udp
       - VPN_HEALTHCHECK_ENABLED=false
       - VPN_NAMESERVERS=
       - PRIVOXY_ENABLED=false
       - UNBOUND_ENABLED=false
-      - UNBOUND_NAMESERVERS=
+      - UNBOUND_NAMESERVERS
 
   radarr:
     image: ghcr.io/hotio/radarr
