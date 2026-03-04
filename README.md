@@ -55,3 +55,9 @@ Navigate to the `minecraft/` directory. Rename the provided `.env.example` to `.
 **Note:** I recommend reading the [image documentation](https://docker-minecraft-server.readthedocs.io/en/latest/) to understand the available environment variables and capabilities, as you will likely want to customize the server further. This repository reflects my specific configuration.
 
 Run `docker compose up -d` to start the server.
+
+### Satisfactory
+
+This should be pretty much plug and play. You should still consult the [image documentation](https://github.com/wolveix/satisfactory-server/?tab=readme-ov-file#satisfactory-server), particularly the section on [environment variables](https://github.com/wolveix/satisfactory-server?tab=readme-ov-file#environment-variables) if you're interested in configuring it.
+
+Navigate to the `satisfactory/` directory and run `docker compose up -d` to start the server.
