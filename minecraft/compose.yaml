@@ -2,26 +2,28 @@ services:
   minecraft-server:
     image: itzg/minecraft-server
     container_name: minecraft-server
+    restart: unless-stopped
+    tty: true
+    stdin_open: true
     ports:
-      - 25565:25565
+      - "25565:25565"
     volumes:
       - ./data:/data
     environment:
-      EULA: true
+      EULA: "TRUE"
       MEMORY: 6G
       TYPE: "FABRIC"
+      VERSION: "LATEST"
+      WHITELIST: ${WHITELIST:-}
+      SEED: ${SEED:-}
+      DIFFICULTY: "HARD"
+      REMOVE_OLD_MODS: "TRUE"
       VANILLATWEAKS_SHARECODE: "p5vukZ"
-      REMOVE_OLD_MODS: true
-      MODRINTH_PROJECTS_DEFAULT_VERSION_TYPE: "alpha"
       MODRINTH_PROJECTS: |
         lithium
         krypton
-        ferrite-core
-        c2me-fabric
-        vmp-fabric
         scalablelux
-        noisiumforked
-      WHITELIST: ${WHITELIST}
-      DIFFICULTY: "hard"
-      SEED: ${SEED}
-    restart: unless-stopped
+        ferrite-core
+        fabric-api
+        servercore
+        distanthorizons:beta
