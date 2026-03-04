@@ -1,8 +1,11 @@
 {
 	email {$EMAIL}
+	http_port 8080
+	https_port 8443
 }
 
 (cloudflare) {
+	encode zstd gzip
 	tls {
 		dns cloudflare {$CLOUDFLARE_API_TOKEN}
 	}
@@ -40,6 +43,11 @@ homarr.{$DOMAIN} {
 	reverse_proxy homarr:7575
 }
 
+bazarr.{$DOMAIN} {
+	import cloudflare
+	reverse_proxy bazarr:6767
+}
+
 dash.{$DOMAIN} {
 	import cloudflare
 	reverse_proxy dashdot:3001
@@ -54,6 +62,5 @@ vault.{$DOMAIN} {
 	import cloudflare
 	reverse_proxy vaultwarden:80 {
 		header_up X-Real-IP {remote_host}
-		header_up X-Forwarded-Proto {scheme}
 	}
 }
