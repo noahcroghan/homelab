@@ -21,9 +21,5 @@ services:
       VANILLATWEAKS_SHARECODE: "p5vukZ"
       MODRINTH_PROJECTS: |
         lithium
-        krypton
         scalablelux
         ferrite-core
-        fabric-api
-        servercore
-        distanthorizons:beta
